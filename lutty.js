@@ -134,7 +134,9 @@ var Lutty = {
                                 }
                             }
 
-                            return Object.keys(prev_dir);
+                            output = Object.keys(prev_dir).join("<br>");
+                            
+                            return output;
                         },
 
                         cd: function (args) {
@@ -185,6 +187,30 @@ var Lutty = {
                             prev_dir[dirname] = {}
 
                             return Object.keys(prev_dir);
+                        },
+
+                        more: function (args) {
+                            if (args == null) {
+                                return 'Cannot read empty';
+                            } else {
+                                file = args[0];
+                            }
+                            
+                            var dir = self.meta.dir;
+                            var subdirs = dir.split('/');
+                            var prev_dir = null;
+                            for (var i = 0; i < subdirs.length; i++) {
+                                if (prev_dir == null) {
+                                    prev_dir = self.fs()[subdirs[i]];
+                                } else {
+                                    prev_dir = prev_dir[subdirs[i]];
+                                }
+                            }
+                            
+                            if (prev_dir[file]['__content__'] == undefined) {
+                                return 'Not a file';
+                            }
+                            return prev_dir[file]['__content__']
                         }
                     },
 
@@ -196,6 +222,9 @@ var Lutty = {
                     log: {
                         'system.log': {
                             __content__: `This is just a log file`
+                        },
+                        'logfile.log': {
+                            __content__: `[ERROR] @ line 93`
                         }
                     }
                 },
