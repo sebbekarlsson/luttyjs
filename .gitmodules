@@ -1,0 +1,3 @@
+[submodule "ElemenTailor"]
+	path = ElemenTailor
+	url = https://github.com/sebbekarlsson/ElemenTailor.git

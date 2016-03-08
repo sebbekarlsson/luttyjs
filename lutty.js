@@ -6,7 +6,13 @@ var Lutty = {
     */
     init: function() {
         var ttys = document.querySelectorAll('.lutty');
-        console.log(ttys);
+        for (var i = 0; i < ttys.length; i++) {
+            var tty = ttys[i];
+            var terminal = ElemenTailor.create('div', { class: 'tty-terminal' });
+
+            tty.parentNode.appendChild(terminal);
+            ElemenTailor.delete(tty);
+        }
 
         return true;
     }
