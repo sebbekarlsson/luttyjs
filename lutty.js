@@ -15,6 +15,20 @@ var Lutty = {
         }
 
         return true;
+    },
+
+
+    filesystem: {
+        'files': {
+            '/': {
+                'usr': {
+                    'bin': {}
+                },
+                'dev': {},
+                'etc': {},
+                'opt': {}
+            },
+        }
     }
 };
 
