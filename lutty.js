@@ -20,15 +20,38 @@ var Lutty = {
 
     filesystem: {
         'files': {
-            '/': {
-                'usr': {
-                    'bin': {}
+             '': {
+                'files':{
+                    'usr': {
+                        'files': {
+                            'bin': {
+                                'files': {
+                                    'ls' : {
+                                        'executable': 'true',
+
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    'dev': {'files': {}},
+                    'etc': {'files': {}},
+                    'opt': {'files': {}}
                 },
-                'dev': {},
-                'etc': {},
-                'opt': {}
-            },
+            }
         }
+    },
+
+    meta: {
+        'dir': ''
+    },
+        
+    
+    ls:function() {
+        var filesystem = this.filesystem;
+        var dir = this.meta['dir'];
+
+        return filesystem['files'][dir];
     }
 };
 
