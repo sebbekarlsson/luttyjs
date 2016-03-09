@@ -202,7 +202,7 @@ var Lutty = {
                             
                             var absolute_dir = Lutty.get_dir(dir);
 
-                            if (absolute_dir['__content__'] != undefined) {
+                            if (absolute_dir['__content__'] != undefined || typeof(absolute_dir) == 'function') {
                                 return 'Cannot cd into file.';
                             }
 
@@ -219,7 +219,7 @@ var Lutty = {
                             
                             var relative_dir = Lutty.get_dir(tmp_dir);
                             
-                            if (relative_dir['__content__'] != undefined) {
+                            if (relative_dir['__content__'] != undefined || typeof(relative_dir) == 'function') {
                                 return 'Cannot cd into file.';
                             }
 
