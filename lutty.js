@@ -80,7 +80,19 @@ var Lutty = {
                     }
 
                     try {
-                    var output = self.fs()['~']['usr']['bin'][command_name](args);
+                        var func = self.fs['~']['usr']['bin'][command_name];
+                        if (typeof(func) == 'function') {
+                            var output = self.fs['~']['usr']['bin'][command_name](args);
+                        } else {
+                            if (func != undefined) {
+                                if ('__content__' in func) {
+                                    var output = eval(func['__content__']);
+                                }
+                            } else {
+                                 var output = 'Command not found';
+                            }
+                        }
+
                     } catch (e) { var output = e; }
 
                     cmd_history.appendChild(ElemenTailor.create('div', {
@@ -109,133 +121,222 @@ var Lutty = {
     },
 
 
-    fs: function () {
-        self = this;
-
-        return {
-            '~': {
-                usr: {
-                    bin: {
-                        ls: function (args) {
-                            if (args == null) {
-                                var dir = self.meta.dir;
-                            } else {
-                                dir = args[0];
-                            }
-                            var subdirs = dir.split('/');
-                            
-                            
-                            var prev_dir = null;
-                            for (var i = 0; i < subdirs.length; i++) {
-                                if (prev_dir == null) {
-                                    prev_dir = self.fs()[subdirs[i]];
-                                } else {
-                                    prev_dir = prev_dir[subdirs[i]];
-                                }
-                            }
-
-                            output = Object.keys(prev_dir).join(" ");
-                            
-                            return output;
-                        },
-
-                        cd: function (args) {
-                            if (args != null) {
-                                var dir = args[0];
-                                if (dir == '/') { dir = '~'; }
-                            } else {
-                                var dir = '~';
-                            }
-                            
-                            if (dir.startsWith('~')) {
-                                self.meta.dir = dir;
-                            } else if (dir == '..') {
-                                if (self.meta.dir != '~') {
-                                    var subdirs = self.meta.dir.split('/');
-                                    subdirs.pop(subdirs.length-1);
-                                    if (!Array.isArray(subdirs)) { subdirs = [subdirs]; }
-                                    self.meta.dir = subdirs.join('/');
-                                }
-                            } else {
-                                self.meta.dir += '/' + dir;
-                            }
-                        },
-                        
-                        pwd: function (args) {
-                            return self.meta.dir;
-                        },
-
-                        mkdir: function (args) {
-                            if (args == null) {
-                                return 'You must choose a dirname';
-                            } else {
-                                dirname = args[0];
-                            }
-
+    fs: {
+        '~': {
+            usr: {
+                bin: {
+                    ls: function (args) {
+                        if (args == null) {
                             var dir = self.meta.dir;
+                        } else {
+                            dir = args[0];
+                        }
+                        var subdirs = dir.split('/');
+                        
+                        
+                        var prev_dir = null;
+                        for (var i = 0; i < subdirs.length; i++) {
+                            if (prev_dir == null) {
+                                prev_dir = self.fs[subdirs[i]];
+                            } else {
+                                prev_dir = prev_dir[subdirs[i]];
+                            }
+                        }
+
+                        output = Object.keys(prev_dir).join(" ");
+                        
+                        return output;
+                    },
+
+                    cd: function (args) {
+                        if (args != null) {
+                            var dir = args[0];
+                            if (dir == '/') { dir = '~'; }
+                        } else {
+                            var dir = '~';
+                        }
+
+                        
+                        if (dir.startsWith('~')) {
                             var subdirs = dir.split('/');
-                            
                             var prev_dir = null;
                             for (var i = 0; i < subdirs.length; i++) {
                                 if (prev_dir == null) {
-                                    prev_dir = self.fs()[subdirs[i]];
+                                    prev_dir = self.fs[subdirs[i]];
                                 } else {
                                     prev_dir = prev_dir[subdirs[i]];
                                 }
                             }
 
-                            prev_dir[dirname] = {}
-
-                            return Object.keys(prev_dir);
-                        },
-
-                        more: function (args) {
-                            if (args == null) {
-                                return 'Cannot read empty';
-                            } else {
-                                file = args[0];
+                            if (prev_dir['__content__'] != undefined) {
+                                return 'Cannot cd into file.';
                             }
-                            
-                            if (!file.startsWith('~')) {
-                                var dir = self.meta.dir;
-                            } else {
-                                var dir = file.split('/');
-                                dir.pop(dir.length);
-                                dir = dir.join('/');
-                                var file = file.split('/')[file.split('/').length-1];
+
+                            self.meta.dir = dir;
+                        } else if (dir == '..') {
+                            if (self.meta.dir != '~') {
+                                var subdirs = self.meta.dir.split('/');
+                                subdirs.pop(subdirs.length-1);
+                                if (!Array.isArray(subdirs)) { subdirs = [subdirs]; }
+                                self.meta.dir = subdirs.join('/');
                             }
-                            var subdirs = dir.split('/');
+                        } else {
+                            tmp_dir = self.meta.dir + '/' + dir;
+                            var subdirs = tmp_dir.split('/');
                             var prev_dir = null;
                             for (var i = 0; i < subdirs.length; i++) {
                                 if (prev_dir == null) {
-                                    prev_dir = self.fs()[subdirs[i]];
+                                    prev_dir = self.fs[subdirs[i]];
                                 } else {
                                     prev_dir = prev_dir[subdirs[i]];
                                 }
                             }
-                            
-                            if (prev_dir[file]['__content__'] == undefined) {
-                                return 'Not a file';
+
+                            if (prev_dir['__content__'] != undefined) {
+                                return 'Cannot cd into file.';
                             }
-                            return prev_dir[file]['__content__']
+
+                            self.meta.dir += '/' + dir;
+                        }
+                    },
+                    
+                    pwd: function (args) {
+                        return self.meta.dir;
+                    },
+
+                    mkdir: function (args) {
+                        if (args == null) {
+                            return 'You must choose a dirname';
+                        } else {
+                            dirname = args[0];
+                        }
+
+                        var dir = self.meta.dir;
+                        var subdirs = dir.split('/');
+                        
+                        var prev_dir = null;
+                        for (var i = 0; i < subdirs.length; i++) {
+                            if (prev_dir == null) {
+                                prev_dir = self.fs[subdirs[i]];
+                            } else {
+                                prev_dir = prev_dir[subdirs[i]];
+                            }
+                        }
+
+                        prev_dir[dirname] = {}
+
+                        return Object.keys(prev_dir);
+                    },
+
+                    touch: function (args, content='') {
+                        if (args == null) {
+                            return 'You must choose a filename';
+                        } else {
+                            filename = args[0];
+                        }
+
+                        var dir = self.meta.dir;
+                        var subdirs = dir.split('/');
+                        
+                        var prev_dir = null;
+                        for (var i = 0; i < subdirs.length; i++) {
+                            if (prev_dir == null) {
+                                prev_dir = self.fs[subdirs[i]];
+                            } else {
+                                prev_dir = prev_dir[subdirs[i]];
+                            }
+                        }
+
+                        prev_dir[filename] = {
+                            __content__: content
+                        }
+
+                        return Object.keys(prev_dir);
+                    },
+
+                    echo: function (args) {
+                        if (args == null) {
+                            return '';
+                        } else {
+                            var ech = args[0];
+
+                            if (args[1] == '>') {
+                                var filename = args[2];
+                                this.touch([filename], ech);
+                            } else {
+                                return ech;
+                            }
                         }
                     },
 
-                },
-                etc: {},
-                dev: {},
-                opt: {},
-                var: {
-                    log: {
-                        'system.log': {
-                            __content__: `This is just a log file`
-                        },
-                        'logfile.log': {
-                            __content__: `[ERROR] @ line 93`
+                    more: function (args) {
+                        if (args == null) {
+                            return 'Cannot read empty';
+                        } else {
+                            file = args[0];
                         }
+                        
+                        if (!file.startsWith('~')) {
+                            var dir = self.meta.dir;
+                        } else {
+                            var dir = file.split('/');
+                            dir.pop(dir.length);
+                            dir = dir.join('/');
+                            var file = file.split('/')[file.split('/').length-1];
+                        }
+                        var subdirs = dir.split('/');
+                        var prev_dir = null;
+                        for (var i = 0; i < subdirs.length; i++) {
+                            if (prev_dir == null) {
+                                prev_dir = self.fs[subdirs[i]];
+                            } else {
+                                prev_dir = prev_dir[subdirs[i]];
+                            }
+                        }
+                        
+                        if (prev_dir[file]['__content__'] == undefined) {
+                            return 'Not a file';
+                        }
+                        return prev_dir[file]['__content__']
+                    },
+
+                    bash: function(args) {
+                        if (args == null) {
+                            return 'Unable to execute void.';
+                        } else {
+                            filename = args[0];
+                        }
+                            
+                        var dir = self.meta.dir;
+                        var subdirs = dir.split('/');
+                        var prev_dir = null;
+                        for (var i = 0; i < subdirs.length; i++) {
+                            if (prev_dir == null) {
+                                prev_dir = self.fs[subdirs[i]];
+                            } else {
+                                prev_dir = prev_dir[subdirs[i]];
+                            }
+                        }
+
+
+                        return eval(prev_dir[filename]['__content__']);
                     }
                 },
-            }
+
+            },
+            etc: {},
+            dev: {},
+            opt: {},
+            var: {
+                log: {
+                    'system.log': {
+                        __content__: `This is just a log file`
+                    },
+                    'logfile.log': {
+                        __content__: `[ERROR] @ line 93`
+                    }
+                }
+            },
         }
     },
 
