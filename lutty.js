@@ -196,7 +196,14 @@ var Lutty = {
                                 file = args[0];
                             }
                             
-                            var dir = self.meta.dir;
+                            if (!file.startsWith('~')) {
+                                var dir = self.meta.dir;
+                            } else {
+                                var dir = file.split('/');
+                                dir.pop(dir.length);
+                                dir = dir.join('/');
+                                var file = file.split('/')[file.split('/').length-1];
+                            }
                             var subdirs = dir.split('/');
                             var prev_dir = null;
                             for (var i = 0; i < subdirs.length; i++) {
