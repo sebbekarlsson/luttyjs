@@ -174,24 +174,17 @@ var Lutty = {
             usr: {
                 bin: {
                     ls: function (args) {
-                        if (args == null) {
-                            var dir = self.meta.dir;
-                        } else {
-                            dir = args[0];
-                        }
-                        var subdirs = dir.split('/');
-                        
-                        
-                        var prev_dir = null;
-                        for (var i = 0; i < subdirs.length; i++) {
-                            if (prev_dir == null) {
-                                prev_dir = self.fs[subdirs[i]];
-                            } else {
-                                prev_dir = prev_dir[subdirs[i]];
+                        if (args != null) {
+                            var dir = args[0];
+                            if (!args[0].startsWith('~')) {
+                                dir = self.meta.dir + '/' + dir;
                             }
+                        } else {
+                            var dir = self.meta.dir;    
                         }
-
-                        output = Object.keys(prev_dir).join(" ");
+                        
+                        var ls_dir = Lutty.get_dir(dir);
+                        output = Object.keys(ls_dir).join(" ");
                         
                         return output;
                     },
@@ -206,17 +199,10 @@ var Lutty = {
 
                         
                         if (dir.startsWith('~')) {
-                            var subdirs = dir.split('/');
-                            var prev_dir = null;
-                            for (var i = 0; i < subdirs.length; i++) {
-                                if (prev_dir == null) {
-                                    prev_dir = self.fs[subdirs[i]];
-                                } else {
-                                    prev_dir = prev_dir[subdirs[i]];
-                                }
-                            }
+                            
+                            var absolute_dir = Lutty.get_dir(dir);
 
-                            if (prev_dir['__content__'] != undefined) {
+                            if (absolute_dir['__content__'] != undefined) {
                                 return 'Cannot cd into file.';
                             }
 
@@ -230,17 +216,10 @@ var Lutty = {
                             }
                         } else {
                             tmp_dir = self.meta.dir + '/' + dir;
-                            var subdirs = tmp_dir.split('/');
-                            var prev_dir = null;
-                            for (var i = 0; i < subdirs.length; i++) {
-                                if (prev_dir == null) {
-                                    prev_dir = self.fs[subdirs[i]];
-                                } else {
-                                    prev_dir = prev_dir[subdirs[i]];
-                                }
-                            }
-
-                            if (prev_dir['__content__'] != undefined) {
+                            
+                            var relative_dir = Lutty.get_dir(tmp_dir);
+                            
+                            if (relative_dir['__content__'] != undefined) {
                                 return 'Cannot cd into file.';
                             }
 
@@ -257,23 +236,12 @@ var Lutty = {
                             return 'You must choose a dirname';
                         } else {
                             dirname = args[0];
+                            var dir = self.meta.dir;
                         }
 
-                        var dir = self.meta.dir;
-                        var subdirs = dir.split('/');
-                        
-                        var prev_dir = null;
-                        for (var i = 0; i < subdirs.length; i++) {
-                            if (prev_dir == null) {
-                                prev_dir = self.fs[subdirs[i]];
-                            } else {
-                                prev_dir = prev_dir[subdirs[i]];
-                            }
-                        }
+                        var mk_dir = Lutty.get_dir(dir);
 
-                        prev_dir[dirname] = {}
-
-                        return Object.keys(prev_dir);
+                        mk_dir[dirname] = {}
                     },
 
                     touch: function (args, content='') {
@@ -283,23 +251,11 @@ var Lutty = {
                             filename = args[0];
                         }
 
-                        var dir = self.meta.dir;
-                        var subdirs = dir.split('/');
-                        
-                        var prev_dir = null;
-                        for (var i = 0; i < subdirs.length; i++) {
-                            if (prev_dir == null) {
-                                prev_dir = self.fs[subdirs[i]];
-                            } else {
-                                prev_dir = prev_dir[subdirs[i]];
-                            }
-                        }
+                        var current_dir = Lutty.get_dir(self.meta.dir);
 
-                        prev_dir[filename] = {
+                        current_dir[filename] = {
                             __content__: content
                         }
-
-                        return Object.keys(prev_dir);
                     },
 
                     echo: function (args) {
@@ -321,31 +277,18 @@ var Lutty = {
                         if (args == null) {
                             return 'Cannot read empty';
                         } else {
-                            file = args[0];
-                        }
-                        
-                        if (!file.startsWith('~')) {
-                            var dir = self.meta.dir;
-                        } else {
-                            var dir = file.split('/');
-                            dir.pop(dir.length);
-                            dir = dir.join('/');
-                            var file = file.split('/')[file.split('/').length-1];
-                        }
-                        var subdirs = dir.split('/');
-                        var prev_dir = null;
-                        for (var i = 0; i < subdirs.length; i++) {
-                            if (prev_dir == null) {
-                                prev_dir = self.fs[subdirs[i]];
-                            } else {
-                                prev_dir = prev_dir[subdirs[i]];
+                            var dir = args[0];
+                            if (!dir.startsWith('~')) {
+                                dir = self.meta.dir + '/' + dir;
                             }
                         }
                         
-                        if (prev_dir[file]['__content__'] == undefined) {
+                        var more_dir = Lutty.get_dir(dir);
+
+                        if (more_dir['__content__'] == undefined) {
                             return 'Not a file';
                         }
-                        return prev_dir[file]['__content__']
+                        return more_dir['__content__']
                     },
 
                     bash: function(args) {
@@ -354,20 +297,10 @@ var Lutty = {
                         } else {
                             filename = args[0];
                         }
+
+                        var current_dir = Lutty.get_dir(self.meta.dir);
                             
-                        var dir = self.meta.dir;
-                        var subdirs = dir.split('/');
-                        var prev_dir = null;
-                        for (var i = 0; i < subdirs.length; i++) {
-                            if (prev_dir == null) {
-                                prev_dir = self.fs[subdirs[i]];
-                            } else {
-                                prev_dir = prev_dir[subdirs[i]];
-                            }
-                        }
-
-
-                        return eval(prev_dir[filename]['__content__']);
+                        return eval(current_dir[filename]['__content__']);
                     }
                 },
 
@@ -376,16 +309,25 @@ var Lutty = {
             dev: {},
             opt: {},
             var: {
-                log: {
-                    'system.log': {
-                        __content__: `This is just a log file`
-                    },
-                    'logfile.log': {
-                        __content__: `[ERROR] @ line 93`
-                    }
-                }
+                log: {}
             },
+            tmp: {}
         }
+    },
+
+    get_dir: function(dirname) {
+        var dir = dirname;
+        var subdirs = dir.split('/');
+        var prev_dir = null;
+        for (var i = 0; i < subdirs.length; i++) {
+            if (prev_dir == null) {
+                prev_dir = self.fs[subdirs[i]];
+            } else {
+                prev_dir = prev_dir[subdirs[i]];
+            }
+        }
+
+        return prev_dir;
     },
 
     meta: {
