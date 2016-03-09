@@ -9,9 +9,9 @@ var Lutty = {
 
         var ttys = document.querySelectorAll('.lutty');
         for (var i = 0; i < ttys.length; i++) {
-            var tty = ttys[i];
+            this.tty = ttys[i];
 
-            var editor_prefix = ElemenTailor.create('div', {
+            this.editor_prefix = ElemenTailor.create('div', {
                 type: 'text',
                 style: `width: auto;
                        float: left;
@@ -20,7 +20,7 @@ var Lutty = {
                 innerHTML: `[` + self.meta.dir + `]$`
             });
 
-            var editor = ElemenTailor.create('input', {
+            this.editor = ElemenTailor.create('input', {
                 type: 'text',
                 style: `background-color: black;
                         outline: none;
@@ -29,97 +29,145 @@ var Lutty = {
                         display: block;
                         width: 100%;
                         float: right;
-                       `
+                       `,
+                autofocus: true   
             });
 
-            var cmd_history = ElemenTailor.create('div', {
+            this.cmd_history = ElemenTailor.create('pre', {
                 type: 'text',
                 style: `width: 100%;
                        `
             });    
 
-            var terminal = ElemenTailor.create('div',
+            this.terminal = ElemenTailor.create('div',
                     {
                         class: 'tty-terminal',
                         style: `background-color: black;
                                 color: white;
                                 width: 100%;
                                 height: 100%;
-                                overflow: scroll;
+                                overflow-y: scroll;
                                 `,
                         childs: [
-                            cmd_history,
+                            this.cmd_history,
                             ElemenTailor.create('div', {
                                 style: `display: flex;`,
                                 childs: [
-                                    editor_prefix,
-                                    editor
+                                    this.editor_prefix,
+                                    this.editor
                                 ]
                             })
                         ]
                     }
                     );
 
-            tty.parentNode.appendChild(terminal);
-            ElemenTailor.delete(tty);
+            this.tty.parentNode.appendChild(this.terminal);
+            ElemenTailor.delete(this.tty);
 
 
 
-            editor.addEventListener('keydown', function (e) {
+            this.editor.addEventListener('keydown', function (e) {
                 if (e.keyCode == 13) {
-                    var command = editor.value.split(' ');
-                    var command_name = command[0];
-                    if (command.length > 1) {
-                        var args = command;
-                        args.shift();
-                        console.log(args);
-
-                        if (!Array.isArray(args)) { args = [args]; }
-                    } else {
-                        var args = null;
-                    }
-
-                    try {
-                        var func = self.fs['~']['usr']['bin'][command_name];
-                        if (typeof(func) == 'function') {
-                            var output = self.fs['~']['usr']['bin'][command_name](args);
-                        } else {
-                            if (func != undefined) {
-                                if ('__content__' in func) {
-                                    var output = eval(func['__content__']);
-                                }
-                            } else {
-                                 var output = 'Command not found';
-                            }
-                        }
-
-                    } catch (e) { var output = e; }
-
-                    cmd_history.appendChild(ElemenTailor.create('div', {
-                        innerHTML: editor.value,
-                        style: `width: 100%;
-                                color: yellow;
-                                   `
-                    }));
-                    
-                    if (output != undefined) {
-                        cmd_history.appendChild(ElemenTailor.create('div', {
-                            innerHTML: output,
-                            style: `width: 100%;
-                                    color: white;
-                                   `
-                        }));
-                    }
-                    editor.value = '';
-                    editor_prefix.innerHTML = `[` + self.meta.dir + `]$`;
-                    terminal.scrollTop = terminal.scrollHeight;
+                   Lutty.execute(this.value); 
                 }
             });
         }
+        
+        
+        function e0() {
+            Lutty.execute('echo BOOTING...');
+
+            setTimeout(eA, 2500);
+        }
+
+        function eA() {
+            Lutty.execute('echo GOING_INTO_BIN_FOLDER...');
+            Lutty.execute('cd ~/usr/bin');
+
+            setTimeout(eB, 1000);
+        }
+        
+
+        function eB() {
+            Lutty.execute('echo COMPRESSING_FILESYSTEM...');
+            Lutty.execute('echo JSON.stringify(Lutty.fs); > fs');
+
+            setTimeout(eC, 1000);
+        }
+
+        function eC() {
+            Lutty.execute('echo GOING_BACK...');
+            Lutty.execute('cd');
+
+            setTimeout(eD, 1000);
+        }
+
+        function eD() {
+            Lutty.execute('echo EXECUTING...');
+            Lutty.execute('fs');
+
+            setTimeout(eF, 1000);
+        }
+
+        function eF() {
+            Lutty.execute('echo DONE.');
+        }
+
+        e0();
 
         return true;
     },
 
+    execute: function (command) {
+        var command_original = command;
+        var command = command.split(' ');
+        var command_name = command[0];
+        if (command.length > 1) {
+            var args = command;
+            args.shift();
+            console.log(args);
+
+            if (!Array.isArray(args)) { args = [args]; }
+        } else {
+            var args = null;
+        }
+
+        try {
+            var func = Lutty.fs['~']['usr']['bin'][command_name];
+            if (typeof(func) == 'function') {
+                var output = Lutty.fs['~']['usr']['bin'][command_name](args);
+            } else {
+                if (func != undefined) {
+                    if ('__content__' in func) {
+                        var output = eval(func['__content__']);
+                    }
+                } else {
+                     var output = 'Command not found';
+                }
+            }
+
+        } catch (e) { var output = e; }
+
+        Lutty.cmd_history.appendChild(ElemenTailor.create('div', {
+            innerHTML: command_original,
+            style: `width: 100%;
+                    color: yellow;
+                       `
+        }));
+        
+        if (output != undefined) {
+            Lutty.cmd_history.appendChild(ElemenTailor.create('div', {
+                innerHTML: output,
+                style: `width: 100%;
+                        color: white;
+                       `
+            }));
+        }
+        Lutty.editor.value = '';
+        Lutty.editor_prefix.innerHTML = `[` + self.meta.dir + `]$`;
+        Lutty.editor.setAttribute('autofocus', true);
+        Lutty.terminal.scrollTop = Lutty.terminal.scrollHeight;
+    },
 
     fs: {
         '~': {
