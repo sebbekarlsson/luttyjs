@@ -301,6 +301,10 @@ var Lutty = {
                         var current_dir = Lutty.get_dir(self.meta.dir);
                             
                         return eval(current_dir[filename]['__content__']);
+                    },
+
+                    clear: function(args) {
+                        Lutty.cmd_history.innerHTML = '';
                     }
                 },
 
