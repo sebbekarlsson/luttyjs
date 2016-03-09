@@ -284,6 +284,10 @@ var Lutty = {
                         }
                         
                         var more_dir = Lutty.get_dir(dir);
+                        
+                        if (typeof(more_dir) == 'function') {
+                            return String(more_dir);
+                        }
 
                         if (more_dir['__content__'] == undefined) {
                             return 'Not a file';
