@@ -134,7 +134,7 @@ var Lutty = {
                                 }
                             }
 
-                            output = Object.keys(prev_dir).join("<br>");
+                            output = Object.keys(prev_dir).join(" ");
                             
                             return output;
                         },
